@@ -148,6 +148,7 @@ void LaserMapping::ProcessIMU(const lightning::IMUPtr &imu) {
 
 bool LaserMapping::Run() {
     if (!SyncPackages()) {
+        LOG(WARNING) << "sync package failed";
         return false;
     }
 
@@ -218,7 +219,7 @@ bool LaserMapping::Run() {
         [&, this]() {
             // 成员变量预分配
             residuals_.resize(cur_pts, 0);
-            point_selected_surf_.resize(cur_pts, true);
+            point_selected_surf_.resize(cur_pts, 1);
             plane_coef_.resize(cur_pts, Vec4f::Zero());
 
             auto old_state = kf_.GetX();
@@ -385,16 +386,18 @@ bool LaserMapping::SyncPackages() {
         measures_.scan_ = lidar_buffer_.front();
         measures_.lidar_begin_time_ = time_buffer_.front();
 
+        LOG(INFO) << "last point time: " << measures_.scan_->points.back().timestamp;
+
         if (measures_.scan_->points.size() <= 1) {
             LOG(WARNING) << "Too few input point cloud!";
             lidar_end_time_ = measures_.lidar_begin_time_ + lidar_mean_scantime_;
-        } else if (measures_.scan_->points.back().time / double(1000) < 0.5 * lidar_mean_scantime_) {
+        } else if (measures_.scan_->points.back().timestamp / double(1000) < 0.5 * lidar_mean_scantime_) {
             lidar_end_time_ = measures_.lidar_begin_time_ + lidar_mean_scantime_;
         } else {
             scan_num_++;
-            lidar_end_time_ = measures_.lidar_begin_time_ + measures_.scan_->points.back().time / double(1000);
+            lidar_end_time_ = measures_.lidar_begin_time_ + measures_.scan_->points.back().timestamp / double(1000);
             lidar_mean_scantime_ +=
-                (measures_.scan_->points.back().time / double(1000) - lidar_mean_scantime_) / scan_num_;
+                (measures_.scan_->points.back().timestamp / double(1000) - lidar_mean_scantime_) / scan_num_;
         }
 
         lo::lidar_time_interval = lidar_mean_scantime_;
@@ -404,6 +407,7 @@ bool LaserMapping::SyncPackages() {
     }
 
     if (last_timestamp_imu_ < lidar_end_time_) {
+        LOG(INFO) << last_timestamp_imu_ << ", " << lidar_end_time_;
         return false;
     }
 
@@ -425,8 +429,7 @@ bool LaserMapping::SyncPackages() {
     time_buffer_.pop_front();
     lidar_pushed_ = false;
 
-    // LOG(INFO) << "sync: " << std::setprecision(14) << measures_.lidar_begin_time_ << ", " <<
-    // measures_.lidar_end_time_;
+    LOG(INFO) << "sync: " << std::setprecision(14) << measures_.lidar_begin_time_ << ", " << measures_.lidar_end_time_;
 
     return true;
 }
