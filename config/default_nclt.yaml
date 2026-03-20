@@ -1,13 +1,13 @@
 # 针对NCLT的配置
 common:
   dataset: "nclt"
-  lidar_topic: "/LIDAR/POINTS"
+  lidar_topic: "points_raw"
   livox_lidar_topic: "/livox/lidar"
-  imu_topic: "/IMU"
+  imu_topic: "imu_raw"
 
 # fasterlio 参数
 fasterlio:
-  lidar_type: 3                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR,
+  lidar_type: 2                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR,
   scan_line: 32
   blind: 0.5                # 盲区，小于盲区距离的不会处理
   time_scale: 1e-3             # 兼容不同数据集的时间单位，仅对Velodyne LiDAR(lidar_type=2)生效
@@ -34,6 +34,8 @@ fasterlio:
                  0, 1, 0,
                  0, 0, 1 ]
   keep_first_imu_estimation: false
+  kf_dis_th: 3.0
+  kf_angle_th: 15.0
 
 
 g2p5:

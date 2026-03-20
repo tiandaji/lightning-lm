@@ -261,7 +261,7 @@ inline void ImuProcess::UndistortPcl(const MeasureGroup &meas, ESKF &kf_state, C
     /*** sort point clouds by offset time ***/
     pcl_out = meas.scan_;
     std::sort(pcl_out->points.begin(), pcl_out->points.end(),
-              [](const PointType &p1, const PointType &p2) { return p1.timestamp < p2.timestamp; });
+              [](const PointType &p1, const PointType &p2) { return p1.time < p2.time; });
 
     /*** undistort each lidar point (backward propagation) ***/
     if (pcl_out->empty()) {
@@ -278,8 +278,14 @@ inline void ImuProcess::UndistortPcl(const MeasureGroup &meas, ESKF &kf_state, C
         acc_imu = (tail->acc);
         angvel_avr = (tail->gyr);
 
-        for (; it_pcl->timestamp / double(1000) > head->offset_time; it_pcl--) {
-            dt = it_pcl->timestamp / double(1000) - head->offset_time;
+        for (; it_pcl->time / double(1000) > head->offset_time && it_pcl != pcl_out->points.begin(); it_pcl--) {
+            dt = it_pcl->time / double(1000) - head->offset_time;
+
+            /// dt 有时候存在非法数据
+            if (dt < 0 || dt > lo::lidar_time_interval) {
+                // LOG(WARNING) << "find abnormal dt in cloud: " << dt;
+                continue;
+            }
 
             /* Transform to the 'end' frame, using only the rotation
              * Note: Compensation direction is INVERSE of Frame's moving direction
@@ -299,9 +305,9 @@ inline void ImuProcess::UndistortPcl(const MeasureGroup &meas, ESKF &kf_state, C
             it_pcl->y = p_compensate(1);
             it_pcl->z = p_compensate(2);
 
-            if (it_pcl == pcl_out->points.begin()) {
-                break;
-            }
+            // if (it_pcl == pcl_out->points.begin()) {
+            //     break;
+            // }
         }
     }
 }
