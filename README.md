@@ -221,7 +221,7 @@ Lightning-LM特性：
 - 添加定位部分激光定位的修正量比例，现在会基于LIO预测来进行定位，防止激光跳变太大
 - LaserMapping部分加上了点到点ICP误差,点到点的部分也使用多线程加速
 - ESKF部分加了一些实用的trick
-- 定位现在会取LIO的关键帧来进行map to map配准 
+- 定位现在会取LIO的关键帧来进行map to map配准
 - 针对云深处的几个数据集和github issues里的数据集做了调参
 - 调整了ESKF的接口以适应点到点ICP的情况（因为点到点ICP与点面ICP的维度不同）
 - 添加了一些Kalman filter里的tricks: 对P阵做对称化，保护最小值等
@@ -271,6 +271,15 @@ Lightning-LM特性：
 - NCLT 数据集上的定位
 
 ![](./doc/lm_loc1_nclt.gif)
+
+- 云深处四足机械狗上的数据
+
+![](./doc/demo_ysc1.png)
+![](./doc/demo_ysc2.png)
+![](./doc/demo_ysc3.png)
+
+- 斜装的DEMO
+  ![](./doc/demo_github.png)
 
 ## 编译
 
